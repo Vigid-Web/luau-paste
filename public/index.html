@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Luau Paste - Cloudflare</title>
+<style>
+body{background:#0f172a;color:#e2e8f0;font-family:system-ui;margin:0;padding:2rem}
+.card{max-width:800px;margin:auto;background:#1e293b;padding:2rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+textarea{width:100%;height:320px;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:1rem;font-family:ui-monospace;font-size:14px}
+button{background:#14b8a6;border:none;padding:0.8rem 1.5rem;border-radius:8px;color:#000;font-weight:700;cursor:pointer;margin-top:1rem}
+button:hover{opacity:.9}
+.result{margin-top:1.5rem;padding:1rem;background:#0f172a;border-radius:8px;display:none;border:1px solid #334155}
+a{color:#5eead4;text-decoration:none}
+input{width:100%;padding:.6rem;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:6px;margin-top:.5rem;font-family:ui-monospace}
+h1{margin-top:0}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Luau Paste</h1>
+<p>Paste your script → get a raw URL for <code>loadstring(game:HttpGet(...))()</code></p>
+<textarea id="code" placeholder="-- your Luau script here"></textarea>
+<button onclick="create()">Create Paste</button>
+<div id="result" class="result"></div>
+</div>
+<script>
+async function create(){
+  const code = document.getElementById('code').value;
+  if(!code.trim()){alert('Paste something');return}
+  const btn = document.querySelector('button');
+  btn.disabled=true; btn.textContent='Uploading...';
+  try{
+    const res = await fetch('/api/paste', {method:'POST', body: code, headers:{'Content-Type':'text/plain'}});
+    const data = await res.json();
+    document.getElementById('result').style.display='block';
+    document.getElementById('result').innerHTML = `
+      <p><strong>Raw URL:</strong> <a href="${data.raw}" target="_blank">${data.raw}</a></p>
+      <p><strong>Luau:</strong></p>
+      <input value='loadstring(game:HttpGet("${data.raw}"))()' readonly onclick="this.select()">
+      <p style="margin-top:1rem"><a href="${data.view}" target="_blank">View page →</a></p>
+    `;
+  }catch(e){alert('Error: '+e)}
+  btn.disabled=false; btn.textContent='Create Paste';
+}
+</script>
+</body>
+</html>
